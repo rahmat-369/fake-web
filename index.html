@@ -1,81 +1,188 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fake Call</title>
+
 <style>
-body{background:#111;color:#fff;font-family:Arial;display:flex;justify-content:center;padding:40px}
-.container{background:#1e1e1e;padding:25px;width:360px;border-radius:10px;text-align:center}
-input,select{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none}
-button{width:100%;padding:10px;border:none;border-radius:6px;background:#00c853;color:white}
-.hidden{display:none}
-#result img{margin-top:15px;max-width:100%}
+body{
+  margin:0;
+  background:#0f0f0f;
+  font-family:Arial, sans-serif;
+  color:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+
+.card{
+  background:#1c1c1c;
+  padding:25px;
+  width:360px;
+  border-radius:12px;
+  box-shadow:0 0 20px rgba(0,0,0,0.5);
+}
+
+h1{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:15px;
+}
+
+.tabs button{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  background:#2a2a2a;
+  color:#fff;
+}
+
+.tabs button.active{
+  background:#00c853;
+}
+
+input, select{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border:none;
+  border-radius:6px;
+}
+
+button.generate{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:6px;
+  background:#00c853;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button.generate:hover{
+  background:#00a844;
+}
+
+#result{
+  margin-top:15px;
+  text-align:center;
+}
+
+#result img{
+  max-width:100%;
+  border-radius:8px;
+}
+
+.loading{
+  opacity:0.7;
+  font-size:14px;
+}
 </style>
 </head>
 <body>
 
-<div class="container">
-<h1>📞 Fake Call</h1>
+<div class="card">
+  <h1>📞 Fake Generator</h1>
 
-<button onclick="show('call')">Fake Call</button>
-<button onclick="show('dev')">Fake Dev</button>
+  <div class="tabs">
+    <button id="tabCall" class="active">Fake Call</button>
+    <button id="tabDev">Fake Dev</button>
+  </div>
 
-<form id="callForm">
-<input name="nama" placeholder="Nama" required>
-<input name="waktu" placeholder="13:46" required>
-<input type="file" name="image" required>
-<button>Generate</button>
-</form>
+  <!-- FAKE CALL -->
+  <form id="formCall">
+    <input type="text" name="nama" placeholder="Nama kontak" required>
+    <input type="text" name="waktu" placeholder="Contoh: 12:00" required>
+    <input type="text" name="image" placeholder="URL gambar (harus online)" required>
+    <button class="generate">Generate</button>
+  </form>
 
-<form id="devForm" class="hidden">
-<input name="username" placeholder="Username" required>
-<select name="verified">
-<option value="true">Verified</option>
-<option value="false">Not Verified</option>
-</select>
-<input type="file" name="image" required>
-<button>Generate</button>
-</form>
+  <!-- FAKE DEV -->
+  <form id="formDev" style="display:none;">
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="text" name="image" placeholder="URL gambar (harus online)" required>
+    <select name="verified">
+      <option value="true">Verified</option>
+      <option value="false">Not Verified</option>
+    </select>
+    <button class="generate">Generate</button>
+  </form>
 
-<div id="result"></div>
+  <div id="result"></div>
 </div>
 
 <script>
-function show(type){
-document.getElementById("callForm").classList.toggle("hidden", type!=="call");
-document.getElementById("devForm").classList.toggle("hidden", type!=="dev");
-}
+const tabCall = document.getElementById("tabCall");
+const tabDev = document.getElementById("tabDev");
+const formCall = document.getElementById("formCall");
+const formDev = document.getElementById("formDev");
+const result = document.getElementById("result");
 
-async function send(form,url){
-const data=new FormData(form);
-const nama=form.nama?.value||"";
-const waktu=form.waktu?.value||"";
-const username=form.username?.value||"";
-const verified=form.verified?.value||"true";
-
-let endpoint=url;
-if(url.includes("fakecall")){
-endpoint+=`?nama=${nama}&waktu=${waktu}`;
-}else{
-endpoint+=`?username=${username}&verified=${verified}`;
-}
-
-const res=await fetch(endpoint,{method:"POST",body:data});
-const blob=await res.blob();
-document.getElementById("result").innerHTML=
-"<img src='"+URL.createObjectURL(blob)+"'>";
-}
-
-document.getElementById("callForm").onsubmit=e=>{
-e.preventDefault();
-send(e.target,"/api/fakecall");
+tabCall.onclick = () => {
+  tabCall.classList.add("active");
+  tabDev.classList.remove("active");
+  formCall.style.display = "block";
+  formDev.style.display = "none";
+  result.innerHTML="";
 };
 
-document.getElementById("devForm").onsubmit=e=>{
-e.preventDefault();
-send(e.target,"/api/fakedev");
+tabDev.onclick = () => {
+  tabDev.classList.add("active");
+  tabCall.classList.remove("active");
+  formDev.style.display = "block";
+  formCall.style.display = "none";
+  result.innerHTML="";
+};
+
+async function send(endpoint, data){
+  result.innerHTML = "<div class='loading'>⏳ Generating...</div>";
+
+  try{
+    const res = await fetch(endpoint,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify(data)
+    });
+
+    if(!res.ok){
+      const err = await res.json();
+      throw new Error(err.message || "Server error");
+    }
+
+    const blob = await res.blob();
+    const imgUrl = URL.createObjectURL(blob);
+
+    result.innerHTML = "<img src='"+imgUrl+"'>";
+  }catch(err){
+    result.innerHTML = "<div style='color:red;'>❌ "+err.message+"</div>";
+  }
+}
+
+formCall.onsubmit = (e)=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(formCall));
+  send("/api/fakecall", data);
+};
+
+formDev.onsubmit = (e)=>{
+  e.preventDefault();
+  const data = Object.fromEntries(new FormData(formDev));
+  send("/api/fakedev", data);
 };
 </script>
 
 </body>
-</html> 
+                                          </html> 
