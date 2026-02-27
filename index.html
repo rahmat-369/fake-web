@@ -1,194 +1,81 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fake Call</title>
-
 <style>
-body{
-  background:#111;
-  font-family:Arial, sans-serif;
-  color:#fff;
-  display:flex;
-  justify-content:center;
-  padding:40px;
-}
-
-.container{
-  background:#1e1e1e;
-  padding:25px;
-  width:360px;
-  border-radius:10px;
-  text-align:center;
-}
-
-h1{
-  margin-bottom:5px;
-}
-
-.desc{
-  font-size:14px;
-  opacity:.7;
-  margin-bottom:20px;
-}
-
-.tabs{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:15px;
-}
-
-.tabs button{
-  width:48%;
-  padding:8px;
-  border:none;
-  border-radius:6px;
-  background:#333;
-  color:#fff;
-  cursor:pointer;
-}
-
-.tabs button.active{
-  background:#00c853;
-}
-
-form{
-  display:none;
-}
-
-form.active{
-  display:block;
-}
-
-input, select{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border:none;
-  border-radius:6px;
-}
-
-button.submit{
-  width:100%;
-  padding:10px;
-  border:none;
-  border-radius:6px;
-  background:#00c853;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-#result img{
-  margin-top:15px;
-  max-width:100%;
-  border-radius:8px;
-}
-
-.channel{
-  margin-top:20px;
-  font-size:14px;
-}
-
-.channel a{
-  color:#00e676;
-  text-decoration:none;
-}
+body{background:#111;color:#fff;font-family:Arial;display:flex;justify-content:center;padding:40px}
+.container{background:#1e1e1e;padding:25px;width:360px;border-radius:10px;text-align:center}
+input,select{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none}
+button{width:100%;padding:10px;border:none;border-radius:6px;background:#00c853;color:white}
+.hidden{display:none}
+#result img{margin-top:15px;max-width:100%}
 </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>📞 Fake Call</h1>
-  <p class="desc">Generator Fake Call & Fake Developer Card</p>
+<h1>📞 Fake Call</h1>
 
-  <div class="tabs">
-    <button id="btnCall" class="active">Fake Call</button>
-    <button id="btnDev">Fake Dev</button>
-  </div>
+<button onclick="show('call')">Fake Call</button>
+<button onclick="show('dev')">Fake Dev</button>
 
-  <!-- Fake Call -->
-  <form id="callForm" class="active">
-    <input type="text" name="nama" placeholder="Nama kontak" required>
-    <input type="text" name="waktu" placeholder="13:46" required>
-    <input type="file" name="image" accept="image/*" required>
-    <button class="submit">Generate</button>
-  </form>
+<form id="callForm">
+<input name="nama" placeholder="Nama" required>
+<input name="waktu" placeholder="13:46" required>
+<input type="file" name="image" required>
+<button>Generate</button>
+</form>
 
-  <!-- Fake Dev -->
-  <form id="devForm">
-    <input type="text" name="username" placeholder="Username" required>
-    <select name="verified">
-      <option value="true">Verified</option>
-      <option value="false">Not Verified</option>
-    </select>
-    <input type="file" name="image" accept="image/*" required>
-    <button class="submit">Generate</button>
-  </form>
+<form id="devForm" class="hidden">
+<input name="username" placeholder="Username" required>
+<select name="verified">
+<option value="true">Verified</option>
+<option value="false">Not Verified</option>
+</select>
+<input type="file" name="image" required>
+<button>Generate</button>
+</form>
 
-  <div id="result"></div>
-
-  <div class="channel">
-    <p>Join Saluran WhatsApp:</p>
-    <a href="https://whatsapp.com/channel/0029VbBjyjlJ93wa6hwSWa0p" target="_blank">
-      ✧･ﾟ: [𝙍]𝙝𝙢𝙏 | 𝘾𝙤𝙙𝙚⚙️𝘼𝙄 𝙡 :･ﾟ✧
-    </a>
-  </div>
+<div id="result"></div>
 </div>
 
 <script>
-const btnCall = document.getElementById("btnCall");
-const btnDev = document.getElementById("btnDev");
-const callForm = document.getElementById("callForm");
-const devForm = document.getElementById("devForm");
-const result = document.getElementById("result");
-
-btnCall.onclick = () => {
-  btnCall.classList.add("active");
-  btnDev.classList.remove("active");
-  callForm.classList.add("active");
-  devForm.classList.remove("active");
-};
-
-btnDev.onclick = () => {
-  btnDev.classList.add("active");
-  btnCall.classList.remove("active");
-  devForm.classList.add("active");
-  callForm.classList.remove("active");
-};
-
-async function submitForm(form, endpoint){
-  result.innerHTML = "⏳ Generating...";
-
-  const data = new FormData(form);
-
-  try{
-    const res = await fetch(endpoint,{
-      method:"POST",
-      body:data
-    });
-
-    if(!res.ok) throw new Error("Gagal generate");
-
-    const blob = await res.blob();
-    const imgUrl = URL.createObjectURL(blob);
-    result.innerHTML = "<img src='"+imgUrl+"'>";
-  }catch(err){
-    result.innerHTML = "❌ Error: "+err.message;
-  }
+function show(type){
+document.getElementById("callForm").classList.toggle("hidden", type!=="call");
+document.getElementById("devForm").classList.toggle("hidden", type!=="dev");
 }
 
-callForm.onsubmit = (e)=>{
-  e.preventDefault();
-  submitForm(callForm,"/api/fakecall");
+async function send(form,url){
+const data=new FormData(form);
+const nama=form.nama?.value||"";
+const waktu=form.waktu?.value||"";
+const username=form.username?.value||"";
+const verified=form.verified?.value||"true";
+
+let endpoint=url;
+if(url.includes("fakecall")){
+endpoint+=`?nama=${nama}&waktu=${waktu}`;
+}else{
+endpoint+=`?username=${username}&verified=${verified}`;
+}
+
+const res=await fetch(endpoint,{method:"POST",body:data});
+const blob=await res.blob();
+document.getElementById("result").innerHTML=
+"<img src='"+URL.createObjectURL(blob)+"'>";
+}
+
+document.getElementById("callForm").onsubmit=e=>{
+e.preventDefault();
+send(e.target,"/api/fakecall");
 };
 
-devForm.onsubmit = (e)=>{
-  e.preventDefault();
-  submitForm(devForm,"/api/fakedev");
+document.getElementById("devForm").onsubmit=e=>{
+e.preventDefault();
+send(e.target,"/api/fakedev");
 };
 </script>
 
 </body>
-  </html>
+</html> 
